@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepFace — AI Face Recognition Suite</title>
+    <meta name="description" content="Test DeepFace AI face recognition, verification, and analysis with this interactive web interface.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(18, 18, 30, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8b8ba3;
+            --text-muted: #5a5a72;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========== Animated Background ========== */
+        .bg-gradient-orbs {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-gradient-orbs .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.12;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-gradient-orbs .orb:nth-child(1) {
+            width: 600px; height: 600px;
+            background: #6366f1;
+            top: -200px; left: -100px;
+            animation-delay: 0s;
+        }
+        .bg-gradient-orbs .orb:nth-child(2) {
+            width: 500px; height: 500px;
+            background: #8b5cf6;
+            bottom: -150px; right: -100px;
+            animation-delay: -7s;
+        }
+        .bg-gradient-orbs .orb:nth-child(3) {
+            width: 400px; height: 400px;
+            background: #06b6d4;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(60px, -40px) scale(1.1); }
+            50% { transform: translate(-30px, 60px) scale(0.95); }
+            75% { transform: translate(40px, 30px) scale(1.05); }
+        }
+
+        /* ========== Layout ========== */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+        }
+
+        /* ========== Header ========== */
+        .header {
+            text-align: center;
+            padding: 48px 0 40px;
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent-primary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .header-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ========== Tab Navigation ========== */
+        .tab-nav {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(20px);
+            margin-bottom: 36px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* ========== Panels ========== */
+        .tab-panel { display: none; animation: fadeSlideIn 0.4s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== Cards ========== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            backdrop-filter: blur(20px);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* ========== Upload Zones ========== */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .upload-grid.single { grid-template-columns: 1fr; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+        .upload-zone {
+            position: relative;
+            border: 2px dashed rgba(99, 102, 241, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-glass);
+            overflow: hidden;
+        }
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .upload-zone.has-image {
+            padding: 0;
+            border-style: solid;
+            border-color: var(--accent-primary);
+        }
+        .upload-zone .icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+        .upload-zone .label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .upload-zone .sublabel {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .upload-zone img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+        .upload-zone .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: background 0.2s;
+        }
+        .upload-zone .remove-btn:hover { background: var(--danger); }
+        .upload-zone input[type="file"] { display: none; }
+
+        /* ========== Options Row ========== */
+        .options-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .option-group {
+            flex: 1;
+            min-width: 160px;
+        }
+        .option-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .option-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8ba3' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        /* ========== Action Button ========== */
+        .action-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        .action-btn:active { transform: translateY(0); }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .action-btn .spinner {
+            display: none;
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        .action-btn.loading .spinner { display: inline-block; }
+        .action-btn.loading .btn-text { opacity: 0.7; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ========== Results ========== */
+        .results-section {
+            margin-top: 28px;
+        }
+        .results-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .results-title .icon { font-size: 18px; }
+
+        /* Verify result */
+        .verify-result {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            animation: fadeSlideIn 0.5s ease;
+        }
+        .verify-result.match {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .verify-result.no-match {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .verify-badge {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+        .verify-result.match .verify-badge {
+            background: rgba(16, 185, 129, 0.15);
+        }
+        .verify-result.no-match .verify-badge {
+            background: rgba(239, 68, 68, 0.15);
+        }
+        .verify-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .verify-result.match .verify-info h3 { color: var(--success); }
+        .verify-result.no-match .verify-info h3 { color: var(--danger); }
+        .verify-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .stat-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            animation: fadeSlideIn 0.5s ease;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .stat-card .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Analyze result */
+        .analysis-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+            animation: fadeSlideIn 0.5s ease;
+        }
+        .analysis-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+        .analysis-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .analysis-row:last-child { border-bottom: none; }
+        .analysis-row .label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .analysis-row .value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Progress bar */
+        .progress-bar-wrap {
+            flex: 1;
+            max-width: 200px;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 100px;
+            margin: 0 12px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: var(--accent-gradient);
+            transition: width 0.8s ease;
+        }
+
+        /* Emotion bars */
+        .emotion-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .emotion-bar .name {
+            width: 80px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+        .emotion-bar .bar-bg {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .emotion-bar .bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 1s ease;
+        }
+        .emotion-bar .pct {
+            width: 45px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .emotion-colors-0 { background: #6366f1; }
+        .emotion-colors-1 { background: #8b5cf6; }
+        .emotion-colors-2 { background: #a78bfa; }
+        .emotion-colors-3 { background: #06b6d4; }
+        .emotion-colors-4 { background: #10b981; }
+        .emotion-colors-5 { background: #f59e0b; }
+        .emotion-colors-6 { background: #ef4444; }
+
+        /* Error box */
+        .error-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            color: #fca5a5;
+            font-size: 13px;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+        .status-dot.connected { background: var(--success); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header h1 { font-size: 32px; }
+            .upload-grid { grid-template-columns: 1fr; }
+            .app-container { padding: 12px 16px 40px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-gradient-orbs">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-badge">
+                <span class="dot"></span>
+                AI-Powered
+            </div>
+            <h1>DeepFace</h1>
+            <p>Face verification, analysis & recognition powered by state-of-the-art deep learning models</p>
+        </header>
+
+        <!-- Status -->
+        <div class="status-bar" id="statusBar">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Checking API connection...</span>
+        </div>
+
+        <!-- Tabs -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="verify" id="tabVerify">🔍 Verify</button>
+            <button class="tab-btn" data-tab="analyze" id="tabAnalyze">🧠 Analyze</button>
+            <button class="tab-btn" data-tab="represent" id="tabRepresent">📊 Represent</button>
+        </nav>
+
+        <!-- ==================== VERIFY ==================== -->
+        <section class="tab-panel active" id="panelVerify">
+            <div class="card">
+                <div class="card-title">Face Verification</div>
+                <div class="card-desc">Upload two face images to check if they belong to the same person</div>
+
+                <div class="upload-grid">
+                    <div class="upload-zone" id="verifyZone1" onclick="document.getElementById('verifyFile1').click()">
+                        <div class="icon">🧑</div>
+                        <div class="label">Image 1</div>
+                        <div class="sublabel">Click or drag to upload</div>
+                        <input type="file" id="verifyFile1" accept="image/*">
+                    </div>
+                    <div class="upload-zone" id="verifyZone2" onclick="document.getElementById('verifyFile2').click()">
+                        <div class="icon">🧑</div>
+                        <div class="label">Image 2</div>
+                        <div class="sublabel">Click or drag to upload</div>
+                        <input type="file" id="verifyFile2" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <div class="option-group">
+                        <label>Model</label>
+                        <select id="verifyModel">
+                            <option value="VGG-Face">VGG-Face</option>
+                            <option value="Facenet">Facenet</option>
+                            <option value="Facenet512">Facenet512</option>
+                            <option value="OpenFace">OpenFace</option>
+                            <option value="DeepFace">DeepFace</option>
+                            <option value="DeepID">DeepID</option>
+                            <option value="ArcFace">ArcFace</option>
+                            <option value="Dlib">Dlib</option>
+                            <option value="SFace">SFace</option>
+                            <option value="GhostFaceNet">GhostFaceNet</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>Detector</label>
+                        <select id="verifyDetector">
+                            <option value="opencv">OpenCV</option>
+                            <option value="ssd">SSD</option>
+                            <option value="mtcnn">MTCNN</option>
+                            <option value="retinaface">RetinaFace</option>
+                            <option value="yolov8">YOLOv8</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>Distance</label>
+                        <select id="verifyDistance">
+                            <option value="cosine">Cosine</option>
+                            <option value="euclidean">Euclidean</option>
+                            <option value="euclidean_l2">Euclidean L2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="verifyBtn" onclick="doVerify()" disabled>
+                    <span class="spinner"></span>
+                    <span class="btn-text">Verify Faces</span>
+                </button>
+
+                <div class="results-section" id="verifyResults"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ANALYZE ==================== -->
+        <section class="tab-panel" id="panelAnalyze">
+            <div class="card">
+                <div class="card-title">Face Analysis</div>
+                <div class="card-desc">Detect age, gender, emotion, and race from a face image</div>
+
+                <div class="upload-grid single">
+                    <div class="upload-zone" id="analyzeZone" onclick="document.getElementById('analyzeFile').click()">
+                        <div class="icon">📸</div>
+                        <div class="label">Upload Face Image</div>
+                        <div class="sublabel">Click or drag to upload</div>
+                        <input type="file" id="analyzeFile" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <div class="option-group">
+                        <label>Detector</label>
+                        <select id="analyzeDetector">
+                            <option value="opencv">OpenCV</option>
+                            <option value="ssd">SSD</option>
+                            <option value="mtcnn">MTCNN</option>
+                            <option value="retinaface">RetinaFace</option>
+                            <option value="yolov8">YOLOv8</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="analyzeBtn" onclick="doAnalyze()" disabled>
+                    <span class="spinner"></span>
+                    <span class="btn-text">Analyze Face</span>
+                </button>
+
+                <div class="results-section" id="analyzeResults"></div>
+            </div>
+        </section>
+
+        <!-- ==================== REPRESENT ==================== -->
+        <section class="tab-panel" id="panelRepresent">
+            <div class="card">
+                <div class="card-title">Face Representation</div>
+                <div class="card-desc">Extract face embedding vector from an image</div>
+
+                <div class="upload-grid single">
+                    <div class="upload-zone" id="representZone" onclick="document.getElementById('representFile').click()">
+                        <div class="icon">🧬</div>
+                        <div class="label">Upload Face Image</div>
+                        <div class="sublabel">Click or drag to upload</div>
+                        <input type="file" id="representFile" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <div class="option-group">
+                        <label>Model</label>
+                        <select id="representModel">
+                            <option value="VGG-Face">VGG-Face</option>
+                            <option value="Facenet">Facenet</option>
+                            <option value="Facenet512">Facenet512</option>
+                            <option value="OpenFace">OpenFace</option>
+                            <option value="DeepFace">DeepFace</option>
+                            <option value="DeepID">DeepID</option>
+                            <option value="ArcFace">ArcFace</option>
+                            <option value="Dlib">Dlib</option>
+                            <option value="SFace">SFace</option>
+                            <option value="GhostFaceNet">GhostFaceNet</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label>Detector</label>
+                        <select id="representDetector">
+                            <option value="opencv">OpenCV</option>
+                            <option value="ssd">SSD</option>
+                            <option value="mtcnn">MTCNN</option>
+                            <option value="retinaface">RetinaFace</option>
+                            <option value="yolov8">YOLOv8</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="representBtn" onclick="doRepresent()" disabled>
+                    <span class="spinner"></span>
+                    <span class="btn-text">Extract Embedding</span>
+                </button>
+
+                <div class="results-section" id="representResults"></div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Built with ❤️ using <a href="https://github.com/serengil/deepface" target="_blank">DeepFace</a> — AI Face Recognition Library
+        </footer>
+    </div>
+
+    <script>
+        // ===================================
+        // CONFIG
+        // ===================================
+        const API_BASE = 'http://127.0.0.1:5005';
+
+        // ===================================
+        // TAB SWITCHING
+        // ===================================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('panel' + capitalize(btn.dataset.tab)).classList.add('active');
+            });
+        });
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        // ===================================
+        // FILE UPLOAD HANDLING
+        // ===================================
+        const files = { verify1: null, verify2: null, analyze: null, represent: null };
+
+        function setupUploadZone(zoneId, fileInputId, fileKey, btnId) {
+            const zone = document.getElementById(zoneId);
+            const input = document.getElementById(fileInputId);
+
+            input.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleFile(e.target.files[0], zoneId, fileKey, btnId);
+            });
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = 'var(--accent-primary)';
+                zone.style.background = 'rgba(99,102,241,0.08)';
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.style.borderColor = '';
+                zone.style.background = '';
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = '';
+                zone.style.background = '';
+                if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0], zoneId, fileKey, btnId);
+            });
+        }
+
+        function handleFile(file, zoneId, fileKey, btnId) {
+            if (!file.type.startsWith('image/')) return;
+            files[fileKey] = file;
+            const zone = document.getElementById(zoneId);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                zone.innerHTML = `
+                    <img src="${e.target.result}" alt="Uploaded">
+                    <button class="remove-btn" onclick="removeImage(event, '${zoneId}', '${fileKey}', '${btnId}')">&times;</button>
+                `;
+                zone.classList.add('has-image');
+                zone.onclick = null;
+                updateBtnState(btnId);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(event, zoneId, fileKey, btnId) {
+            event.stopPropagation();
+            files[fileKey] = null;
+            const zone = document.getElementById(zoneId);
+            const inputId = zoneId === 'verifyZone1' ? 'verifyFile1' :
+                            zoneId === 'verifyZone2' ? 'verifyFile2' :
+                            zoneId === 'analyzeZone' ? 'analyzeFile' : 'representFile';
+            const icons = { verifyZone1: '🧑', verifyZone2: '🧑', analyzeZone: '📸', representZone: '🧬' };
+            const labels = { verifyZone1: 'Image 1', verifyZone2: 'Image 2', analyzeZone: 'Upload Face Image', representZone: 'Upload Face Image' };
+            zone.innerHTML = `
+                <div class="icon">${icons[zoneId]}</div>
+                <div class="label">${labels[zoneId]}</div>
+                <div class="sublabel">Click or drag to upload</div>
+                <input type="file" id="${inputId}" accept="image/*">
+            `;
+            zone.classList.remove('has-image');
+            zone.onclick = () => document.getElementById(inputId).click();
+            // re-bind file input
+            setupUploadZone(zoneId, inputId, fileKey, btnId);
+            updateBtnState(btnId);
+        }
+
+        function updateBtnState(btnId) {
+            const btn = document.getElementById(btnId);
+            if (btnId === 'verifyBtn') {
+                btn.disabled = !(files.verify1 && files.verify2);
+            } else if (btnId === 'analyzeBtn') {
+                btn.disabled = !files.analyze;
+            } else if (btnId === 'representBtn') {
+                btn.disabled = !files.represent;
+            }
+        }
+
+        setupUploadZone('verifyZone1', 'verifyFile1', 'verify1', 'verifyBtn');
+        setupUploadZone('verifyZone2', 'verifyFile2', 'verify2', 'verifyBtn');
+        setupUploadZone('analyzeZone', 'analyzeFile', 'analyze', 'analyzeBtn');
+        setupUploadZone('representZone', 'representFile', 'represent', 'representBtn');
+
+        // ===================================
+        // API STATUS CHECK
+        // ===================================
+        async function checkApi() {
+            try {
+                const res = await fetch(API_BASE + '/');
+                if (res.ok) {
+                    document.getElementById('statusDot').classList.add('connected');
+                    document.getElementById('statusText').textContent = 'API Connected';
+                } else throw new Error();
+            } catch {
+                document.getElementById('statusDot').classList.remove('connected');
+                document.getElementById('statusText').textContent = 'API Disconnected — Start the server on port 5005';
+            }
+        }
+        checkApi();
+        setInterval(checkApi, 10000);
+
+        // ===================================
+        // HELPER – set loading state
+        // ===================================
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // ===================================
+        // VERIFY
+        // ===================================
+        async function doVerify() {
+            const resultDiv = document.getElementById('verifyResults');
+            resultDiv.innerHTML = '';
+            setLoading('verifyBtn', true);
+
+            const formData = new FormData();
+            formData.append('img1', files.verify1);
+            formData.append('img2', files.verify2);
+            formData.append('model_name', document.getElementById('verifyModel').value);
+            formData.append('detector_backend', document.getElementById('verifyDetector').value);
+            formData.append('distance_metric', document.getElementById('verifyDistance').value);
+
+            try {
+                const res = await fetch(API_BASE + '/verify', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.exception || data.error || 'Unknown error');
+
+                const isMatch = data.verified;
+                resultDiv.innerHTML = `
+                    <div class="results-title"><span class="icon">📋</span> Verification Result</div>
+                    <div class="verify-result ${isMatch ? 'match' : 'no-match'}">
+                        <div class="verify-badge">${isMatch ? '✅' : '❌'}</div>
+                        <div class="verify-info">
+                            <h3>${isMatch ? 'Same Person!' : 'Different People'}</h3>
+                            <p>${isMatch ? 'The faces match with high confidence.' : 'The faces do not match the threshold.'}</p>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Distance</div>
+                            <div class="stat-value">${data.distance?.toFixed(4) ?? 'N/A'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Threshold</div>
+                            <div class="stat-value">${data.threshold?.toFixed(4) ?? 'N/A'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Model</div>
+                            <div class="stat-value" style="font-size:14px">${data.model ?? 'N/A'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Time</div>
+                            <div class="stat-value">${data.time ? data.time.toFixed(1) + 's' : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                resultDiv.innerHTML = `<div class="error-box">⚠️ ${err.message}</div>`;
+            }
+            setLoading('verifyBtn', false);
+        }
+
+        // ===================================
+        // ANALYZE
+        // ===================================
+        async function doAnalyze() {
+            const resultDiv = document.getElementById('analyzeResults');
+            resultDiv.innerHTML = '';
+            setLoading('analyzeBtn', true);
+
+            const formData = new FormData();
+            formData.append('img', files.analyze);
+            formData.append('detector_backend', document.getElementById('analyzeDetector').value);
+
+            try {
+                const res = await fetch(API_BASE + '/analyze', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.exception || data.error || 'Unknown error');
+
+                const results = data.results || (Array.isArray(data) ? data : [data]);
+                let html = '<div class="results-title"><span class="icon">🧠</span> Analysis Results</div>';
+
+                results.forEach((face, idx) => {
+                    // Dominant emotion with emoji
+                    const emotionEmoji = {
+                        angry: '😠', disgust: '🤢', fear: '😨',
+                        happy: '😊', sad: '😢', surprise: '😲', neutral: '😐'
+                    };
+
+                    html += `<div class="analysis-card">
+                        <h4>Face ${results.length > 1 ? '#' + (idx + 1) : 'Detected'}</h4>
+                        <div class="analysis-row">
+                            <span class="label">Age</span>
+                            <span class="value">${face.age ?? 'N/A'} years</span>
+                        </div>
+                        <div class="analysis-row">
+                            <span class="label">Gender</span>
+                            <span class="value">${face.dominant_gender ?? 'N/A'} ${face.dominant_gender === 'Man' ? '👨' : '👩'}</span>
+                        </div>
+                        <div class="analysis-row">
+                            <span class="label">Dominant Emotion</span>
+                            <span class="value">${face.dominant_emotion ?? 'N/A'} ${emotionEmoji[face.dominant_emotion] || ''}</span>
+                        </div>
+                        <div class="analysis-row">
+                            <span class="label">Dominant Race</span>
+                            <span class="value">${face.dominant_race ?? 'N/A'}</span>
+                        </div>
+                    </div>`;
+
+                    // Emotion breakdown
+                    if (face.emotion) {
+                        html += '<div class="analysis-card"><h4>Emotion Breakdown</h4>';
+                        const emotions = Object.entries(face.emotion).sort((a, b) => b[1] - a[1]);
+                        emotions.forEach(([name, val], i) => {
+                            html += `<div class="emotion-bar">
+                                <span class="name">${name}</span>
+                                <div class="bar-bg">
+                                    <div class="bar-fill emotion-colors-${i % 7}" style="width:${val.toFixed(1)}%"></div>
+                                </div>
+                                <span class="pct">${val.toFixed(1)}%</span>
+                            </div>`;
+                        });
+                        html += '</div>';
+                    }
+                });
+
+                resultDiv.innerHTML = html;
+            } catch (err) {
+                resultDiv.innerHTML = `<div class="error-box">⚠️ ${err.message}</div>`;
+            }
+            setLoading('analyzeBtn', false);
+        }
+
+        // ===================================
+        // REPRESENT
+        // ===================================
+        async function doRepresent() {
+            const resultDiv = document.getElementById('representResults');
+            resultDiv.innerHTML = '';
+            setLoading('representBtn', true);
+
+            const formData = new FormData();
+            formData.append('img', files.represent);
+            formData.append('model_name', document.getElementById('representModel').value);
+            formData.append('detector_backend', document.getElementById('representDetector').value);
+
+            try {
+                const res = await fetch(API_BASE + '/represent', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.exception || data.error || 'Unknown error');
+
+                const results = data.results || (Array.isArray(data) ? data : [data]);
+                let html = '<div class="results-title"><span class="icon">🧬</span> Embedding Result</div>';
+
+                results.forEach((face, idx) => {
+                    const embedding = face.embedding || [];
+                    const preview = embedding.slice(0, 20).map(v => v.toFixed(4)).join(', ');
+                    html += `<div class="analysis-card">
+                        <h4>Face ${results.length > 1 ? '#' + (idx + 1) : ''} Embedding</h4>
+                        <div class="stats-grid" style="margin-top:0; margin-bottom:16px;">
+                            <div class="stat-card">
+                                <div class="stat-label">Dimensions</div>
+                                <div class="stat-value">${embedding.length}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Model</div>
+                                <div class="stat-value" style="font-size:13px">${document.getElementById('representModel').value}</div>
+                            </div>
+                        </div>
+                        <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:11px;color:var(--text-secondary);word-break:break-all;max-height:180px;overflow-y:auto;line-height:1.8;">
+                            [${preview}${embedding.length > 20 ? ', ...' : ''}]
+                        </div>
+                    </div>`;
+                });
+
+                resultDiv.innerHTML = html;
+            } catch (err) {
+                resultDiv.innerHTML = `<div class="error-box">⚠️ ${err.message}</div>`;
+            }
+            setLoading('representBtn', false);
+        }
+    </script>
+</body>
+</html>
